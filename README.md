@@ -1,6 +1,7 @@
-# JR BLE Gamepad - 2021-01-03 Fabrizio Sitzia 
+# JR BLE Gamepad
+2021-01-03 Fabrizio Sitzia 
 
-- Introduction
+## Introduction
 
 This ESP32 sketch implements a JR module that makes an RC transmitter behave like a 
 Bluetooth HID Gamepad.
@@ -32,7 +33,7 @@ sending HID notifications only when a channel value has changed ...but as channe
 values fluctuate all the time due to noise, this issue had to be dealt with as well!
 
 
-- Implementation notes
+## Implementation notes
 
 This sketch extracts the RC channels from the PPM signal and maps them to gamepad axes.
 A "standard" PPM signal has the following characteristics:
@@ -70,7 +71,7 @@ It has been developed on an "AZ-Delivery ESP32 D1 Mini" board, but it should run
  * 
  * 
 
-- Usage
+## Usage
 
 Channel number 6 is used by this JR module to switch into an 8 bit "compatibility" mode
 and for dynamically setting the desired gamepad update frequency as follows:
