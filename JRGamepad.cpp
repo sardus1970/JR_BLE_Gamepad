@@ -1,5 +1,3 @@
-#include "Arduino.h"
-
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -10,30 +8,27 @@
 #include <driver/adc.h>
 #include "sdkconfig.h"
 
+#include "Arduino.h"
 #include "JRGamepad.h"
 
 
 // HID reports:
 //
-// For maximum compatibility with generic gamepad drivers, up to 6 PPM channels are mapped as follows:
+// For maximum compatibility with generic gamepad drivers, a maximum of 6 PPM channels per gamepad
+// are mapped as follows:
 //
-//  - The first 4 channels are mapped to the X, Y, Z and rZ axes that are typically used for the
-//    axes of two analog joysticks
-//  - The last 2 channels are mapped to the rX and rY axes typically used for the left and right analog
-//    triggers.
+//  - The first 4 channels are mapped to the analog stick axes X, Y, Z and rZ
+//  - The last 2 channels are mapped to the rX and rY axes, which are typically used for the left
+//    and right analog triggers
 //
-// If more than 6 PPM channels are required, they will be mapped as two gamepads in a composite HID
-// report. This may work or not depending on the particular gamepad driver implementation.
-// For instance, this works fine on Mac OS and Windows, but not on Android!
-// (Android's gamepad driver apparently does not support composite gamepad HID reports. That's odd
-// because composite HID reports are used on that system for mapping keyboards with an integrated
-// trackpad)
+// If more than 6 channels are specified during initialization (begin() method), they will be
+// mapped as two gamepads in a composite HID report.
 //
 // The following HID report structures are used for the various gamepad scenarios:
 //
-//  _compatibleHidReport is used for a single gamepad with legacy 8-bit axis resolution
-//  _singleHidReport is used for single gamepad with 16-bit axis resolution
-//  _compositeHidReport is used for a dual gamepad with 16-bit axis resolution
+//   - _compatibleHidReport is used for a single gamepad with 8-bit axis resolution
+//   - _singleHidReport is used for single gamepad with 16-bit axis resolution
+//   - _compositeHidReport is used for a dual gamepad with 16-bit axis resolution
 
 static const uint8_t _compatibleHidReport[] = {
   USAGE_PAGE(1),                0x01, // USAGE_PAGE (Generic Desktop)
@@ -238,11 +233,11 @@ JRGamepad::JRGamepad (std::string deviceName, std::string deviceManufacturer, ui
 
 // Initializer: Begin Bluetooth advertising
 //
-// Different HID report descriptors will be chosen depending on channelCount:
+// A different HID report descriptor is chosen depending on channelCount:
 //
-//      channelCount == 0  : one "compatible" gamepad with 8 bit axis resolution
-//      channelCount <= 6  : one gamepad with 16 bit axis resolution
-//      channelCount > 6   : two gamepads with 16 bit axis resolution
+//  - channelCount == 0  : one "compatibility" mode gamepad with 8 bit axis resolution
+//  - channelCount <= 6  : one gamepad with 16 bit axis resolution
+//  - channelCount > 6   : two gamepads with 16 bit axis resolution
 
 void JRGamepad::begin (int channelCount)
 {
@@ -261,17 +256,16 @@ void JRGamepad::begin (int channelCount)
   xTaskCreate (this->taskServer, "server", 20000, (void *)this, 5, NULL);
 }
 
-// End Bluetooth advertising / comms (unimplemented ...never reached)
+// End Bluetooth advertising / unimplemented ...never reached
 void JRGamepad::end(void)
 {
 }
 
 
-// Set gamepad axes values
+// Set gamepad axis values
 //
-// The array passed as parameter must always have a size of AXIS_COUNT (12 axes) regardless
-// of the number of effectively used channels.
-// Unused channels / axes should be set to a constant value, such as zero.
+// Note: The axes array must be sized to hold 12 channels. Unused channels
+// have to be set to zero before passing the array as parameter.
 
 void JRGamepad::setAxes (int16_t axes[])
 {  
@@ -283,7 +277,7 @@ void JRGamepad::setAxes (int16_t axes[])
     uint8_t report2[13];    // composite gamepad HID report
     int i = 0;
 
-    // Gamepad 1 in 8 bit resolution compatibility mode
+    // Gamepad 1 in 8-bit "compatibility" mode
     if (this->compatibilityMode) {
         report0[i++] = 0;               // 8 buttons
         for (int a = 0; a < 6; a++)     // 6 axes
@@ -293,7 +287,7 @@ void JRGamepad::setAxes (int16_t axes[])
     }
     
     else {
-   	    // Gamepad 1 with 16 bit resolution axes      
+   	    // Gamepad 1 in 16-bit "high-resolution" mode      
         report1[i++] = 0;               // 8 buttons
         for (int a = 0; a < 6; a++) {   // 6 axes
             report1[i++] = axes[a];
@@ -302,7 +296,7 @@ void JRGamepad::setAxes (int16_t axes[])
         this->inputGamepad1->setValue (report1, sizeof (report1));
 	    this->inputGamepad1->notify();
 
-    	// Gamepad 2 with 16 bit resolution axes
+    	// Gamepad 2 with 16-bit resolution axes
     	if (this->dualGamepad) {
        		i = 0;
         	report2[i++] = 0;               // 8 buttons

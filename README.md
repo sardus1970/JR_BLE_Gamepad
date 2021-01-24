@@ -1,41 +1,108 @@
 # JR BLE Gamepad
-2021-01-03 Fabrizio Sitzia 
+2021- Fabrizio Sitzia 
 
 ## Introduction
 
-This ESP32 sketch implements a JR module that makes an RC transmitter behave like a 
-Bluetooth HID Gamepad.
-Most operating systems and RC simulators support such gamepads out of the box, making
-it unnecessary to install additional drivers.
+This ESP32 sketch turns your RC transmitter into a generic Bluetooth LE Gamepad so you can run your favorite RC simulator wirelessly.
 
-The JR module has been specifically targeted towards a Jumper T8SG v2 Plus transmitter, 
-used for controlling an RC helicopter simulator ("CGM Next") running an a Macbook Pro.
-The goal was to get rid of any USB-C hubs, dongles, cables, etc. while preserving the
-low latency and high resolution of a wired USB connection.
+![Introduction image](data/images/intro.jpg)
 
-By the time of this writing, the module has been tested successfully on:
+Most operating systems and RC simulators support such gamepads out of the box, making it unnecessary to install additional drivers.
 
-* Macs running the current Mac OS versions (Catalina and Big Sur), up to 12 axes / 50 Hz
-refresh rate and 6 axes / 100 Hz, both with 16 bit resolution for the gamepad axes.
-* Android devices running an RC glider simulator ("Picasim"), but see note below!
-* TODO: Windows 10 tests
+The JR module has been targeted towards a *Jumper T8SG v2 Plus* transmitter. The goal was to get rid of any USB-C hubs, dongles, cables, etc. when running a simulator on the laptop, while preserving the low latency and high resolution of a wired USB connection.
 
-Note:
-
-Some Android devices have issues with 16 bit axis resolution ("Bqeel Y4 Max" TV box),
-while others have trouble with refresh rates above 20Hz ("Alldocube M5X S" tablet).
-This has nothing to do with CPU performance, as the slowest of the lot (my venerable
-"Blackview BV7000 Pro" smartphone) has no issues with 16 bit resolution / 70 Hz!
-
-This prompted the implementation of an 8 bit "compatibility mode" and configurable
-refresh rate from the transmitter (by sacrificing one channel), and an algorithm for
-sending HID notifications only when a channel value has changed ...but as channel
-values fluctuate all the time due to noise, this issue had to be dealt with as well!
+By the time of this writing, the module has been tested successfully under Mac OS (Catalina and Big Sur), varios Android flavours and Windows 10.
 
 
-## Implementation notes
+## Building the JR module
 
-This sketch extracts the RC channels from the PPM signal and maps them to gamepad axes.
+### Testing the ESP32 board
+
+It is a good idea to first test the ESP32 board before building the module.
+
+Launch the Arduino IDE and edit the main `JR_BLE_Gamepad` sketch: Check if the `LED_PIN` and `PPM_PIN` parameters fit your board, and `#define DEBUG` to have  verbose information appear in the Serial Monitor. Connect the ESP board to the computer's USB port, then compile & upload the sketch.
+
+If all goes well, the following output should appear in the Serial Monitor:
+
+	JR BLE Gamepad - 2021 Fabrizio Sitzia
+	
+	initializing ChannelExtractor: waiting for PPM signal...
+
+You will also notice that the blue onboard LED is now blinking fast, indicating that there is no PPM signal.
+
+The next step assumes that your transmitter outputs a 3.3 volt PPM signal on pin 5 in the JR module bay.
+It is **IMPORTANT** to check that the PPM signal voltage does not exceed 3.3V, as higher voltages might damage the ESP32 or even your transmitter!
+Skip to the next section if that's not the case.
+
+After ensuring that your transmitter outputs a 3.3V PPM signal, you can use two patch wires to connect the GND and PPM signal pins from your transmitter's module bay to the ESP32 board:
+
+![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/ppm_test.jpg)
+
+Configure your transmitter to output a PPM signal. You should then see something like this appearing in the monitor log:
+
+	initializing GamepadRefresh & NoiseEstimator tasks
+	
+	GamepadRefresh: axisCount = 6
+	Positive refresh rate --> 16-bit gamepad @ 100 Hz
+	NoiseEstimator: sampling noise
+	Waiting for Bluetooth connection...
+	*****************************************************************************************************
+	diff : 1 1 1 20 20 21 
+	Noise threshold (max) = 21
+
+You will notice that the blue LED is now blinking slowly, indicating that there is no Bluetooth connection.
+
+Open the Bluetooth settings on your computer. You should see a device called either *JR Gamepad 8*,
+*JR Gamepad 16* or *JR Gamepad 2x16* - depending on the number of detected channels and
+the value of the refresh rate channel (see Usage section)
+
+Pair the device, and if all goes well the onboard LED will turn a steady blue, and you
+should see a stream of axis values appearing in the serial monitor:
+
+	-65 -196 131 199 -32767 32767 / 100 Hz
+	-65 -196 131 196 -32767 32767 / 100 Hz
+	-131 -196 134 196 -32767 32767 / 100 Hz
+	-65 -196 131 196 -32767 32767 / 100 Hz
+	-131 -196 131 199 -32767 32767 / 100 Hz
+	-65 -196 131 196 -32764 32767 / 100 Hz
+	-131 -196 134 196 -32767 32767 / 100 Hz
+	-65 -196 131 196 -32767 32767 / 100 Hz
+	-131 -196 134 196 -32767 32767 / 100 Hz
+
+Those values will appear at a slow rate when you are not touching the transmitter's sticks, but as soon as you wiggle the sticks the rate will accelerate up to the specified refresh rate (100 Hz in the above output)
+
+Go ahead and run your RC simulator now!
+
+
+### Testing the circuit on a breadboard
+
+Now build up the entire circuit on a breadboard:
+
+![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/schematic.png)
+
+It will look a bit like this:
+
+![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/breadboard.jpg)
+
+If in the previous section you had to skip the PPM signal test you can perform that test safely now, as the purpose of the transistor circuit is to shift a wide range of input PPM signal voltages down or up to 3.3V.
+
+
+### Soldering the circuit on a stripboard
+
+Those instructions assume that the stripboard circuit is intended to be fit into a Jumper-style JR module box that you can either order online, or 3D-print using the model included in this project.
+
+Prepare a piece of stripboard with the following dimensions:
+
+TODO
+
+![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/pin_header.jpg)
+
+TODO
+
+![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/module_connector.jpg)
+
+## PPM signal
+
 A "standard" PPM signal has the following characteristics:
 
 * It contains a repeating sequence of 9 pulses: 8 channel pulses plus a sync pulse.
@@ -66,10 +133,13 @@ actually behaves according to the USB HID standard by presenting 2 gamepads.
 
 
 It has been developed on an "AZ-Delivery ESP32 D1 Mini" board, but it should run on 
+
  * any similar ESP32-based board. The D1 Mini was chosen because it fits neatly in a
  * JR module bay enclosure.
- * 
- * 
+
+## How does it work ?
+
+The sketch constantly extracts the RC channels from the JR module bay's PPM signal. Those channel values are mapped to gamepad axis values, which are packed into a gamepad HID report and sent out via Bluetooth LE.
 
 ## Usage
 
@@ -97,3 +167,15 @@ value changes due to user input, but not due to noise!
 
 The transmitter's sticks should therefore not be moved during the first 3 seconds or so
 after connecting to the host.
+
+
+
+Some Android devices have issues with 16 bit axis resolution ("Bqeel Y4 Max" TV box),
+while others have trouble with refresh rates above 20Hz ("Alldocube M5X S" tablet).
+This has nothing to do with CPU performance, as the slowest of the lot (my venerable
+"Blackview BV7000 Pro" smartphone) has no issues with 16 bit resolution / 70 Hz!
+
+This prompted the implementation of an 8 bit "compatibility mode" and configurable
+refresh rate from the transmitter (by sacrificing one channel), and an algorithm for
+sending HID notifications only when a channel value has changed ...but as channel
+values fluctuate all the time due to noise, this issue had to be dealt with as well!

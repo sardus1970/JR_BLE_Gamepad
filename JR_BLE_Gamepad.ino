@@ -5,7 +5,7 @@
    a generic Bluetooth LE Gamepad, so you won't need cables, hubs, receivers or 
    whatever to hook it up to the computer that runs your favorite RC simulator.
    
-   It does that by continously extracting channel information from the JR module bay's
+   It does so by continously extracting channel information from the JR module bay's
    PPM signal, transforming that information into gamepad axis values, and transmitting
    them via Bluetooth LE.
    
@@ -40,23 +40,23 @@
 // 
 // To accomodate the limitations of different gamepad drivers without having to edit
 // the parameters in this sketch and re-flash the board, a "refresh rate channel"
-// can be configured to set the desired refresh rate and for switching between
-// 8-bit / 16-bit axis modes using your TX:
+// is used to both set the desired refresh rate, and to switch between 8-bit
+// and 16-bit resolution modes:
 // 
 //    - Negative channel values indicate 8-bit "compatibility" mode
 //    - Positive values indicate 16-bit "high-resolution" mode
 //    - The absolute channel value sets the desired refresh rate
 // 
 // Example:
-// On a transmitter where channel values (conveniently ;-) range from -100 to 100:
 // 
-//    - A channel value of -30 selects 8-bit "compatibility" mode with a 30 Hz refresh rate
-//    - A channel value of 30 selects 16-bit "high-resolution" mode with a 30 Hz refresh rate
-//    - A channel value of 70 selects 16-bit "high-resolution" mode with a 70 Hz refresh rate
+// On a transmitter where channel values (conveniently) range from -100 to 100:
+// 
+//    - A channel value of -30 selects 8-bit "compatibility" mode and a 30 Hz refresh rate
+//    - A channel value of 30 selects 16-bit "high-resolution" mode and a 30 Hz refresh rate
+//    - A channel value of 70 selects 16-bit "high-resolution" mode and a 70 Hz refresh rate
 //
-// Note that the 8-bit or 16-bit mode is set once on startup, and cannot be
-// changed without restarting the board. The refresh rate however can be changed
-// on the fly.
+// Note that the 8-bit or 16-bit mode is set once on startup, and cannot be changed
+// without restarting the board. The refresh rate however can be changed on the fly.
 // 
 // If you do not intend to use a refresh rate channel, then set it to a number
 // larger than PPM_MAX_CHANNELS, and use REFRESH_RATE_DEFAULT to set a fixed
