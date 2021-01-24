@@ -78,11 +78,11 @@ Go ahead and run your RC simulator now!
 
 Now build up the entire circuit on a breadboard:
 
-![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/schematic.png)
+![schematic](data/images/schematic.png)
 
 It will look a bit like this:
 
-![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/breadboard.jpg)
+![breadboard](data/images/breadboard.jpg)
 
 If in the previous section you had to skip the PPM signal test you can perform that test safely now, as the purpose of the transistor circuit is to shift a wide range of input PPM signal voltages down or up to 3.3V.
 
@@ -95,11 +95,11 @@ Prepare a piece of stripboard with the following dimensions:
 
 TODO
 
-![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/pin_header.jpg)
+![pin headers](data/images/pin_header.jpg)
 
 TODO
 
-![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/module_connector.jpg)
+![JR bay connector](data/images/module_connector.jpg)
 
 ## PPM signal
 
