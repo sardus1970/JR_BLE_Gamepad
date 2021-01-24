@@ -36,7 +36,7 @@ Skip to the next section if that's not the case.
 
 After ensuring that your transmitter outputs a 3.3V PPM signal, you can use two patch wires to connect the GND and PPM signal pins from your transmitter's module bay to the ESP32 board:
 
-![](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/ppm_test.jpg)
+![PPM signal test](data/images/ppm_test.jpg)
 
 Configure your transmitter to output a PPM signal. You should then see something like this appearing in the monitor log:
 
