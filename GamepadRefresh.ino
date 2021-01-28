@@ -27,38 +27,40 @@ int16_t _channelValueToAxisValue (uint32_t channelValue) {
 // Compute the gamepad refresh rate, which can be set dynamically via the refresh rate channel
 
 uint32_t _getRefreshRate() {
-  return axisCount >= REFRESH_RATE_CHANNEL
-    ? REFRESH_RATE_MIN + abs(_channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL -1])) * REFRESH_RATE_MAX / AXIS_MAX
-    : REFRESH_RATE_DEFAULT;
+  uint32_t refreshRate = axisCount >= REFRESH_RATE_CHANNEL
+    ? abs(_channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL -1])) * REFRESH_RATE_MAX / AXIS_MAX
+    : abs(REFRESH_RATE_DEFAULT);
+
+  return refreshRate < REFRESH_RATE_MIN ? REFRESH_RATE_MIN : refreshRate;
 }
 
 
 void gamepadRefreshTask (void *pvParameter) {
 
   // Begin advertising as a single 8-bit "compatibility" mode gamepad, or a single
-  // 16-bit gamepad, or a dual 16-bit gamepad, depending on the availability and
-  // the value of the refresh rate channel:
+  // 16-bit gamepad, or a dual 16-bit gamepad, depending on the value of the refresh
+  // rate channel (if available), or otherwise of the value of REFRESH_RATE_DEFAULT
   
   DEBUG_PRINTLN ();
   DEBUG_PRINT ("GamepadRefresh: axisCount = ");
   DEBUG_PRINTLN (axisCount);
    
-  if (axisCount < REFRESH_RATE_CHANNEL) {
+  if (axisCount < REFRESH_RATE_CHANNEL) {    
+    DEBUG_PRINT ("No refresh rate channel: using REFRESH_RATE_DEFAULT = ");
+    DEBUG_PRINTLN (REFRESH_RATE_DEFAULT);
+  }
+ 
+  int16_t val = axisCount < REFRESH_RATE_CHANNEL
+    ? REFRESH_RATE_DEFAULT
+    : _channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL - 1]);
     
-    DEBUG_PRINT ("No configuration channel --> 16-bit gamepad @ ");
-    DEBUG_PRINT (REFRESH_RATE_DEFAULT);
-    DEBUG_PRINTLN (" Hz default refresh rate");
-    gamepad.begin (axisCount);
-  }
-  else {
-    int16_t val = _channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL - 1]);
-    DEBUG_PRINT ( val < 0 ? "Negative refresh rate --> 8-bit gamepad (compatibility mode) @ "
-                          : "Positive refresh rate --> 16-bit gamepad @ " );
-    DEBUG_PRINT (_getRefreshRate());
-    DEBUG_PRINTLN (" Hz");
-       
-    gamepad.begin (val < 0 ? 0 : axisCount);
-  }
+  DEBUG_PRINT ( val < 0 ? "Negative refresh rate --> 8-bit gamepad (compatibility mode) @ "
+                        : "Positive refresh rate --> 16-bit gamepad @ " );
+  DEBUG_PRINT (_getRefreshRate());
+  DEBUG_PRINTLN (" Hz");
+     
+  gamepad.begin (val < 0 ? 0 : axisCount);
+  
   gamepadInitialized = true;
   DEBUG_PRINTLN ("Waiting for Bluetooth connection...");
 

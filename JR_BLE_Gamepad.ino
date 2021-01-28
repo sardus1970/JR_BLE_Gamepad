@@ -7,18 +7,18 @@
    
    It does so by continously extracting channel information from the JR module bay's
    PPM signal, transforming that information into gamepad axis values, and transmitting
-   them via Bluetooth LE.
+   them via Bluetooth Low Energy.
    
-   The sketch is designed for ESP32 boards. It was developped for an "AZ Delivery ESP32
+   The sketch is designed for ESP32 boards. It was developped on an "AZ Delivery ESP32
    D1 Mini", as that particular board fits nicely in a JR module bay enclosure.
    
    To compile the sketch and to upload it to your board, you will need the Arduino IDE
    with the "ESP32 by Espressif Systems" add-on.
     
    The configurable parameters are listed below. They are set to reasonable defaults
-   that should work with a a wide range of PPM signals and gamepad drivers.
+   that should work with a wide range of PPM signals and gamepad drivers.
    
-   Refer to the README.md file for a more in-depth description.
+   Refer to this project's README.md file for a more in-depth description.
  */
 
 #include "freertos/FreeRTOS.h"
@@ -70,22 +70,6 @@
 // as some gamepad drivers will drop the Bluetooth connection if there is no activity
 // for an extended period of time!
 #define REFRESH_INACTIVITY_MILLIS 1000
-
-// Ideally, the gamepad positions should only change due to user input. But in
-// the real world they change constantly due to all kinds of noise (interference,
-// quantization noise, software rounding errors, your dog farting on the couch...)
-//
-// During the first second after PPM signal detection, this sketch therefore tries
-// to estimate a noise threshold to differentiate user input from background noise.
-//
-// The NOISE_MEDIAN parameter controls the noise threshold selection:
-// - If your PPM signal is very noisy/glitchy, then you should set it to 1
-// - If your PPM signal has little noise, then you should set it to 0
-//
-// Optimally, when not moving any sticks, the gamepad positions should only be
-// updated every REFRESH_INACTIVITY_MILLIS milliseconds - but they should react
-// at the slightest touch of the sticks!
-#define NOISE_MEDIAN 0
 
 // The JR module's PPM input is attached to this pin
 #define PPM_PIN GPIO_NUM_22
