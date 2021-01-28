@@ -7,14 +7,15 @@
    Therefore the channel noise is sampled during the first second after PPM signal detection
    and a noise threshold is computed as follows:
   
-    - The lowest (_min) and highest (_max) channel values are sampled for 1 second
+    - The lowest (_min) and highest (_max) values of each channel are sampled for 1 second
     - Then we compute the differences (_diff) between the _min and _max channel values
     - The noise threshold value is calculated by taking either the median difference or
-      the maximum value, depending on the NOISE_MEDIAN configuration parameter.
+      the maximum difference, depending on the maximum measured noise amplitude
       
-      The maximum value is suitable for PPM signals with little, low-amplitude noise.
-      The median value should be used for very noisy PPM signals that feature irregular,
-      high-amplitude noise peaks!
+   The maximum measured noise difference is suitable for PPM signals with little,
+   low-amplitude noise that is undetectable in an 8-bit signal.
+   The median difference is used for very noisy PPM signals that feature irregular,
+   high-amplitude noise peaks that would appear in an 8-bit signal.
   
    The changeDetected() function, which is invoked by the GamepadRefresh task, compares
    the current channel values with the previous reference channel values (_ref), and returns
@@ -84,9 +85,15 @@ void noiseEstimatorTask (void *pvParameter) {
   }
   DEBUG_PRINTLN();
 
-  if (NOISE_MEDIAN) {
+  // maximum measured noise amplitude
+  uint32_t maxNoise = _diff[axisCount - 1];
+
+  // if there is a lot of noise (maximum noise amplitude is detectable at 8-bit resolution)
+  // then use the median difference as the noise threshold value, otherwise use the maxNoise value:
+  
+  if (maxNoise > (RMT_TICK_US * 1000 / 256)) {
     
-    // use the median noise difference (good for very noisy/unstable PPM signals)
+    // use the median noise difference (very noisy/unstable PPM signal)
     DEBUG_PRINT ("Noise threshold (median) = ");
 
     _noiseThreshold = (axisCount & 0x00000001) == 1  // even or odd number of channels ?
@@ -95,9 +102,9 @@ void noiseEstimatorTask (void *pvParameter) {
   }
   else {
     
-    // use the max noise measurement (good for stable PPM signals)
+    // use the max noise measurement (stable PPM signal with little noise)
     DEBUG_PRINT ("Noise threshold (max) = ");
-    _noiseThreshold = _diff[axisCount - 1];
+    _noiseThreshold = maxNoise;
   }
   DEBUG_PRINTLN (_noiseThreshold);
 
