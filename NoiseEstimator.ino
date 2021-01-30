@@ -42,7 +42,8 @@ void noiseEstimatorTask (void *pvParameter) {
 
   // 1. Initialize data structures
 
-  DEBUG_PRINTLN ("NoiseEstimator: sampling noise");
+  DEBUG_PRINTLN ("");
+  DEBUG_PRINTLN ("2. NoiseEstimator: sampling noise...");
   
   for (int i = 0; i < axisCount; i++) {
     _min[i] = (PPM_PULSE_CENTER + PPM_PULSE_DELTA) * RMT_TICK_US;
@@ -55,7 +56,7 @@ void noiseEstimatorTask (void *pvParameter) {
 
   // iterate 100 times with a 10 millisecond pause between each iteration
   for (int l = 0; l < 100; l++) {
-    DEBUG_PRINT ("*");
+    //DEBUG_PRINT ("*");
 
     // remember the minimum and maximum value of every channel
     for (int i = 0; i < axisCount; i++) {
@@ -77,8 +78,7 @@ void noiseEstimatorTask (void *pvParameter) {
   // ...sort them
   qsort (_diff, axisCount, sizeof(uint32_t), _cmpfunc);
   
-  DEBUG_PRINTLN();
-  DEBUG_PRINT ("diff : ");
+  DEBUG_PRINT ("   Diff : ");
   for (int i = 0; i < axisCount; i++) {
     DEBUG_PRINT (_diff[i]);
     DEBUG_PRINT (" ");
@@ -94,7 +94,7 @@ void noiseEstimatorTask (void *pvParameter) {
   if (maxNoiseAmplitude > (RMT_TICK_US * 1000 / 256)) {
     
     // use the median noise difference (very noisy/unstable PPM signal)
-    DEBUG_PRINT ("Noise threshold (median) = ");
+    DEBUG_PRINT ("   Noise threshold (median) = ");
 
     _noiseThreshold = (axisCount & 0x00000001) == 1  // even or odd number of channels ?
       ? _diff[axisCount / 2]
@@ -103,10 +103,13 @@ void noiseEstimatorTask (void *pvParameter) {
   else {
     
     // use the max noise measurement (stable PPM signal with little noise)
-    DEBUG_PRINT ("Noise threshold (max) = ");
+    DEBUG_PRINT ("   Noise threshold (max) = ");
     _noiseThreshold = maxNoiseAmplitude;
   }
   DEBUG_PRINTLN (_noiseThreshold);
+
+  // initialize gamepad
+  xTaskCreate (gamepadRefreshTask, "gamepadRefreshTask", 65536, NULL, 2, NULL);
 
   // terminate the NoiseEstimator task
   noiseEstimated = true;

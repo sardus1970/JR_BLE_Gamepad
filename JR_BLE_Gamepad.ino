@@ -32,7 +32,7 @@
 // ----- Configurable parameters
 
 // Debug mode: if defined, a lot of stuff gets printed to the Serial Monitor
-#undef DEBUG
+#define DEBUG
 
 // The JR module's PPM input is attached to this pin
 #define PPM_PIN GPIO_NUM_22
@@ -54,7 +54,7 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // 
 // To accomodate the limitations of different gamepad drivers without having to edit
 // the parameters in this sketch and re-flash the board, a "refresh rate channel"
-// is used to both set the desired refresh rate, and to switch between 8-bit
+// can be used to set both he desired refresh rate and to switch between 8-bit
 // and 16-bit axis resolution modes:
 // 
 //    - Negative channel values indicate 8-bit "compatibility" mode
@@ -69,21 +69,15 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 //    - A channel value of 30 selects 16-bit "high-resolution" mode and a 30 Hz refresh rate
 //    - A channel value of 70 selects 16-bit "high-resolution" mode and a 70 Hz refresh rate
 //
-// Note that the 8-bit or 16-bit mode is set once on startup, and cannot be changed
+// Note that the 8-bit or 16-bit resolution is set once on startup, and cannot be changed
 // without restarting the board. The refresh rate however can be changed on the fly.
 // 
-// If you do not intend to use a refresh rate channel, then set it to a number
-// larger than PPM_MAX_CHANNELS, and use REFRESH_RATE_DEFAULT to set a fixed
-// gamepad refresh rate (expressed in Hz)
-#define REFRESH_RATE_CHANNEL 6
+// If you do not intend to use a refresh rate channel then set it to zero, and use
+// REFRESH_RATE_DEFAULT to set a fixed gamepad refresh rate.
+#define REFRESH_RATE_CHANNEL 0
 #define REFRESH_RATE_MIN 1
 #define REFRESH_RATE_MAX 100
-#define REFRESH_RATE_DEFAULT 25
-
-// Force a gamepad refresh after REFRESH_INACTIVITY_MILLIS milliseconds of inactivity,
-// as some gamepad drivers will drop the Bluetooth connection if there is no activity
-// for an extended period of time!
-#define REFRESH_INACTIVITY_MILLIS 1000
+#define REFRESH_RATE_DEFAULT -25
 
 // On transmitters that will always output an 8-channel PPM signal, regardless of the
 // number of channels that you actually want, you can specify a lower number of channels
@@ -93,7 +87,7 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // 
 // If you want to use all the channels that are present in the PPM signal, then set
 // FORCE_CHANNEL_COUNT to zero (the default)
-#define FORCE_CHANNEL_COUNT 0
+#define FORCE_CHANNEL_COUNT 6
 
  
 // ----- Constants & Macros
@@ -109,6 +103,11 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 #define PPM_PULSE_CENTER  1500
 #define PPM_PULSE_DELTA   500
 #define PPM_MAX_FRAMESIZE 50000
+
+// Force a gamepad refresh after REFRESH_INACTIVITY_MILLIS milliseconds of inactivity,
+// as some gamepad drivers will drop the Bluetooth connection if there is no activity
+// for an extended period of time!
+#define REFRESH_INACTIVITY_MILLIS 1000
 
 // ESP32 RMT ("Remote control") module settings.
 //
@@ -169,10 +168,10 @@ void setup() {
   // use the lowest CPU frequency we can get away with, to reduce power consumption
   setCpuFrequencyMhz (80);  // ...80 MHz is the minimum for Bluetooth
   Serial.begin (115200);
-
-  Serial.println ();
-  Serial.println ("JR BLE Gamepad - 2021 Fabrizio Sitzia, Sven Busser");
-  Serial.println ();
+  Serial.println (" ");
+  Serial.println ("========================================================");
+  Serial.println ("   JR BLE Gamepad - 2021 Fabrizio Sitzia, Sven Busser   ");
+  Serial.println ("========================================================");
  
   // initialize the PPM and LED pins
   pinMode (PPM_PIN, INPUT_PULLUP);

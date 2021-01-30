@@ -12,8 +12,8 @@
 */
 
 void channelExtractorTask (void *pvParameter) {
-
-  DEBUG_PRINTLN ("initializing ChannelExtractor: waiting for PPM signal...");
+  DEBUG_PRINTLN ("");
+  DEBUG_PRINTLN ("1. ChannelExtractor: waiting for PPM signal...");
   
   // Configure the ESP32 RMT module for performing continuous decoding of the PPM signal
   rmt_config_t rmt_rx;
@@ -68,18 +68,12 @@ void channelExtractorTask (void *pvParameter) {
     if (channelsAvailable == false) {   // is this the first iteration ? 
       channelsAvailable = true;
    
-      // The initial axisCount plays a critical role for the GamepadRefresh task, as it
+      // The initial axisCount plays a crucial role for the GamepadRefresh task, as it
       // impacts how it will advertise itself via Bluetooth!
-
       axisCount = FORCE_CHANNEL_COUNT ? FORCE_CHANNEL_COUNT : channelCount;
   
-      DEBUG_PRINTLN ("initializing GamepadRefresh & NoiseEstimator tasks");
-
-      // initialize gamepad
-      xTaskCreate (gamepadRefreshTask, "gamepadRefreshTask", 65536, NULL, 2, NULL);
-  
       // compute the channel noise threshold
-      xTaskCreate (noiseEstimatorTask, "noiseEstimatorTask", 1024, NULL, 1, NULL);
+      xTaskCreate (noiseEstimatorTask, "noiseEstimatorTask", 1024, NULL, 1, NULL);      
     }
   }
 

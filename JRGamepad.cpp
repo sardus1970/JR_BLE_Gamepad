@@ -323,8 +323,9 @@ void JRGamepad::setAxes (int16_t axes[])
 
 void JRGamepad::taskServer (void* pvParameter) {
   JRGamepad* JRGamepadInstance = (JRGamepad *) pvParameter;
-  
+
   BLEDevice::init (JRGamepadInstance->deviceName);
+  
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks (new MyCallbacks(JRGamepadInstance));
 
