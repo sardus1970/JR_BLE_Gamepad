@@ -1,7 +1,7 @@
-// The JRGamepad class implements the Gamepad HID & Bluetooth LE communications parts.
+// The JRGamepad class implements the Gamepad HID & Bluetooth LE communications part.
 //
-// It borrows heavily from the Arduino "ESP32-BLE-Gamepad" library by lemmingdev, and from
-// ESP32 code examples of a famous Marxist revolutionary: chegewara ;-)
+// It borrows heavily from the Arduino "ESP32-BLE-Gamepad" library by lemmingdev,
+// and from ESP32 code examples from a famous Marxist revolutionary (chegewara ;-)
 
 #ifndef JRGAMEPAD_H
 #define JRGAMEPAD_H
@@ -11,8 +11,12 @@
 #include "BLEHIDDevice.h"
 #include "BLECharacteristic.h"
 
-// Gamepad axis count
-#define AXIS_COUNT 12
+// Gamepad modes
+#define SINGLE_8BIT   0
+#define SINGLE_16BIT  1
+#define DUAL_8BIT     2
+#define DUAL_16BIT    3
+
 
 class JRGamepad {
 
@@ -25,17 +29,17 @@ class JRGamepad {
     std::string deviceManufacturer;
     std::string deviceName;
     
-    bool connected;           // true if paired and connected to host
-    bool dualGamepad;         // true if more than 6 channels are required
+    uint32_t gamepads;        // number of gamepads: 1 or 2
+    uint32_t gamepadMode;     // 0-3 (see defines above)
     bool compatibilityMode;   // true if axes should have 8-bit instead of 16-bit resolution
+    bool connected;           // true if paired and connected to host
+   
+    BLECharacteristic* inputGamepad[2];
+    JRGamepad ( std::string deviceName          = "JR Gamepad",
+                std::string deviceManufacturer  = "sardus1970",
+    			      uint8_t batteryLevel            = 100 );
   
-    BLECharacteristic* inputGamepad1;
-    BLECharacteristic* inputGamepad2;
-    JRGamepad ( std::string deviceName          = "JR Gamepad 16",
-                std::string deviceManufacturer  = "Fabrizio Sitzia",
-    			      uint8_t batteryLevel      = 100 );
-  
-    void begin (int channelCount);
+    void begin (uint32_t gamepadMode);
     void end (void);
     void setAxes(int16_t axes[]);
       

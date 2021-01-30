@@ -44,7 +44,6 @@ void gamepadRefreshTask (void *pvParameter) {
   DEBUG_PRINTLN ();
   DEBUG_PRINT ("GamepadRefresh: axisCount = ");
   DEBUG_PRINTLN (axisCount);
-   
   if (axisCount < REFRESH_RATE_CHANNEL) {    
     DEBUG_PRINT ("No refresh rate channel: using REFRESH_RATE_DEFAULT = ");
     DEBUG_PRINTLN (REFRESH_RATE_DEFAULT);
@@ -53,13 +52,15 @@ void gamepadRefreshTask (void *pvParameter) {
   int16_t val = axisCount < REFRESH_RATE_CHANNEL
     ? REFRESH_RATE_DEFAULT
     : _channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL - 1]);
-    
-  DEBUG_PRINT ( val < 0 ? "Negative refresh rate --> 8-bit gamepad (compatibility mode) @ "
-                        : "Positive refresh rate --> 16-bit gamepad @ " );
-  DEBUG_PRINT (_getRefreshRate());
-  DEBUG_PRINTLN (" Hz");
      
-  gamepad.begin (val < 0 ? 0 : axisCount);
+  DEBUG_PRINT ( val < 0 ? "Negative refresh rate --> 8-bit gamepad (compatibility mode) @ "
+                        : "Positive refresh rate --> 16-bit gamepad @ ");   
+  DEBUG_PRINT (_getRefreshRate()); DEBUG_PRINTLN (" Hz");
+
+  gamepad.begin (
+    (val < 0 ? 0 : 1)            // 8bit or 16bit axis values ?
+    + (axisCount > 6 ? 2 : 0)    // single or dual gamepad ?
+  );
   
   gamepadInitialized = true;
   DEBUG_PRINTLN ("Waiting for Bluetooth connection...");
@@ -72,9 +73,8 @@ void gamepadRefreshTask (void *pvParameter) {
     uint32_t refreshRate = _getRefreshRate();
     uint32_t now = xTaskGetTickCount() / portTICK_PERIOD_MS;
 
-    if ( gamepad.connected                                                // BLE connection established ?
-         && channelCount == axisCount                           // and channelCount is unchanged ?
-         && (changeDetected()                                             // and user activity detected ?
+    if ( gamepad.connected                                            // BLE connection established ?
+          && (changeDetected()                                           // and user activity detected ?
              || (now - lastRefresh) > REFRESH_INACTIVITY_MILLIS) ) {     // or last refresh older than REFRESH_INACTIVITY_MILLIS ?
 
       // convert timer ticks to gamepad axis values

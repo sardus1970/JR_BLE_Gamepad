@@ -7,7 +7,7 @@
    When a PPM signal is detected for the first time, the ChannelExtractor task will:
 
     - set axisCount to the number of channels
-    - start the GamepadRefresh task / begin BLE Gamepad advertising
+    - start the GamepadRefresh task & begin BLE Gamepad advertising
     - start the NoiseEstimator task for computing the channel noise threshold
 */
 
@@ -71,7 +71,7 @@ void channelExtractorTask (void *pvParameter) {
       // The initial axisCount plays a critical role for the GamepadRefresh task, as it
       // impacts how it will advertise itself via Bluetooth!
 
-      axisCount = channelCount;
+      axisCount = FORCE_CHANNEL_COUNT ? FORCE_CHANNEL_COUNT : channelCount;
   
       DEBUG_PRINTLN ("initializing GamepadRefresh & NoiseEstimator tasks");
 
