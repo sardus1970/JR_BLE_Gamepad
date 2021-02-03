@@ -32,7 +32,7 @@
 // ----- Configurable parameters
 
 // Debug mode: if defined, a lot of stuff gets printed to the Serial Monitor
-#define DEBUG
+#undef DEBUG
 
 // The JR module's PPM input is attached to this pin
 #define PPM_PIN GPIO_NUM_22
@@ -89,7 +89,11 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // FORCE_CHANNEL_COUNT to zero (the default)
 #define FORCE_CHANNEL_COUNT 6
 
- 
+// NoiseEstimator: scale factor when using max noise as the threshold.
+// Good values for NOISE_SCALE are in the range 1.1f to 1.5f
+#define NOISE_SCALE 1.2f
+
+
 // ----- Constants & Macros
 
 // Minimum sync pulse duration, channel pulse center, delta from center and maximum

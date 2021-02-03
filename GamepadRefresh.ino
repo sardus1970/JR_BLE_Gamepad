@@ -48,23 +48,23 @@ void gamepadRefreshTask (void *pvParameter) {
     DEBUG_PRINTLN (REFRESH_RATE_DEFAULT);
   }
  
-  int16_t val = axisCount < REFRESH_RATE_CHANNEL
+  int16_t val = (REFRESH_RATE_CHANNEL == 0 || REFRESH_RATE_CHANNEL > axisCount)
     ? REFRESH_RATE_DEFAULT
     : _channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL - 1]);
      
   DEBUG_PRINT ( val < 0 ? "   Negative refresh rate --> 8-bit gamepad (compatibility mode) @ "
                         : "   Positive refresh rate --> 16-bit gamepad @ ");   
   DEBUG_PRINT (_getRefreshRate()); DEBUG_PRINTLN (" Hz");
+  
+  gamepadInitialized = true;
+  DEBUG_PRINTLN ("   Waiting for Bluetooth connection...");
+  DEBUG_PRINTLN (" ");
 
   gamepad.begin (
     (val < 0 ? 0 : 1)            // 8bit or 16bit axis values ?
     + (axisCount > 6 ? 2 : 0)    // single or dual gamepad ?
   );
-  
-  gamepadInitialized = true;
-  DEBUG_PRINTLN ("   Waiting for Bluetooth connection...");
-  DEBUG_PRINTLN (" ");
-  
+
   // endless loop running at the user-defined Gamepad refresh rate
   uint32_t lastRefresh = 0;
   while (gamepadInitialized) {

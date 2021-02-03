@@ -73,7 +73,10 @@ void channelExtractorTask (void *pvParameter) {
       axisCount = FORCE_CHANNEL_COUNT ? FORCE_CHANNEL_COUNT : channelCount;
   
       // compute the channel noise threshold
-      xTaskCreate (noiseEstimatorTask, "noiseEstimatorTask", 1024, NULL, 1, NULL);      
+      xTaskCreate (noiseEstimatorTask, "noiseEstimatorTask", 1024, NULL, 1, NULL);
+
+      // initialize gamepad
+      //xTaskCreate (gamepadRefreshTask, "gamepadRefreshTask", 65536, NULL, 1, NULL);
     }
   }
 

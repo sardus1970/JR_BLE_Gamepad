@@ -74,7 +74,7 @@ void noiseEstimatorTask (void *pvParameter) {
   // calculate the differences between the min and max channel values
   for (int i = 0; i < axisCount; i++)
     _diff[i] = _max[i] - _min[i];
-
+  
   // ...sort them
   qsort (_diff, axisCount, sizeof(uint32_t), _cmpfunc);
   
@@ -104,15 +104,15 @@ void noiseEstimatorTask (void *pvParameter) {
     
     // use the max noise measurement (stable PPM signal with little noise)
     DEBUG_PRINT ("   Noise threshold (max) = ");
-    _noiseThreshold = maxNoiseAmplitude;
+    _noiseThreshold = maxNoiseAmplitude * NOISE_SCALE;
   }
   DEBUG_PRINTLN (_noiseThreshold);
+  noiseEstimated = true;
 
   // initialize gamepad
-  xTaskCreate (gamepadRefreshTask, "gamepadRefreshTask", 65536, NULL, 2, NULL);
+  xTaskCreate (gamepadRefreshTask, "gamepadRefreshTask", 65536, NULL, 1, NULL);
 
   // terminate the NoiseEstimator task
-  noiseEstimated = true;
   vTaskDelete (NULL);
 }
 
@@ -124,14 +124,19 @@ void noiseEstimatorTask (void *pvParameter) {
 bool changeDetected() {
 
   // check each channel value against the noise threshold
-  for (int i = 0; i < axisCount; i++)
-    if (abs(channelValues[i] - _ref[i]) > _noiseThreshold) {
+  for (int i = 0; i < axisCount; i++) {
+    uint32_t difference = channelValues[i] > _ref[i]
+      ? channelValues[i] - _ref[i]
+      : _ref[i] - channelValues[i];
+    
+    if (difference > _noiseThreshold) {
       
       // set the current channel values as the new reference values
-      for (int j = 0; j < axisCount; j++)
-        _ref[j] = channelValues[j];
-               
+      for (i = 0; i < axisCount; i++)
+        _ref[i] = channelValues[i];
+                   
       return true;
     }
+  }
   return false;
 }
