@@ -32,7 +32,7 @@
 // ----- Configurable parameters
 
 // Debug mode: if defined, a lot of stuff gets printed to the Serial Monitor
-#undef DEBUG
+#define DEBUG
 
 // The JR module's PPM input is attached to this pin
 #define PPM_PIN GPIO_NUM_22
@@ -93,6 +93,11 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // Good values for NOISE_SCALE are in the range 1.1f to 1.5f
 #define NOISE_SCALE 1.2f
 
+// Unity under Windows bug workaround:
+// - if set to 1, only positive gamepad axis values are used (1 bit resolution loss!)
+// - if set to 0, gamepad axis values will span the entire range of negative and positive values
+#define UNITY_BUG_WORKAROUND 1
+
 
 // ----- Constants & Macros
 
@@ -122,6 +127,7 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 #define RMT_TICK_US      (80 / RMT_CLK_DIV)     // RMT clock ticks per microsecond
 
 // Gamepad axis resolution (16 bit, only the high byte is used in 8 bit mode)
+// AXIS_MIN is 0 in UNITY_BUG_WORKAROUND mode, resulting in a 1 bit resolution loss
 #define AXIS_RESOLUTION 65536
 #define AXIS_MIN        -32767
 #define AXIS_MAX        32767

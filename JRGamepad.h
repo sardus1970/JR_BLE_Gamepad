@@ -16,6 +16,10 @@
 #define SINGLE_16BIT  1
 #define DUAL_8BIT     2
 #define DUAL_16BIT    3
+#define SINGLE_7BIT   4
+#define SINGLE_15BIT  5
+#define DUAL_7BIT     6
+#define DUAL_15BIT    7
 
 
 class JRGamepad {
@@ -30,8 +34,10 @@ class JRGamepad {
     std::string deviceName;
     
     uint32_t gamepads;        // number of gamepads: 1 or 2
-    uint32_t gamepadMode;     // 0-3 (see defines above)
+    uint32_t gamepadMode;     // 0-7 (see defines above)
     bool compatibilityMode;   // true if axes should have 8-bit instead of 16-bit resolution
+    bool unityBugWorkaround;  // true if only positive axis values should be used (1 bit of resolution loss),
+                              // ...needed for Unity-based RC simulators under Windows
     bool connected;           // true if paired and connected to host
    
     BLECharacteristic* inputGamepad[2];
@@ -39,7 +45,7 @@ class JRGamepad {
                 std::string deviceManufacturer  = "sardus1970",
     			      uint8_t batteryLevel            = 100 );
   
-    void begin (uint32_t gamepadMode);
+    void begin (uint8_t gamepadMode);
     void end (void);
     void setAxes(int16_t axes[]);
       
