@@ -17,17 +17,15 @@ It was a natural choice to try and make this project fit into such a module (whi
 
 By the time of this writing, the module has been tested successfully under Mac OS (Catalina and Big Sur), various Android devices, and Windows 10.
 
-### Highlights
+### Features
 
 - automatic detection of PPM frame size, up to 12 channels (PPM12)
--  gamepad refresh rate is adjustable on the fly (1Hz-100Hz)
-- 16-bit gamepad axis resolution in *high-resolution* mode, 8-bit in *compatibility* mode
-- refresh rate & axis resolution can be configured on the transmitter (sacrifices one channel)
+- gamepad refresh rate & axis resolution adjustable on the transmitter (sacrifices one channel)
 - 50 nanoseconds pulse-width sampling resolution (14 bits)
-- PPM signal is decoded using the ESP32's RMT hardware
 - 30mA average current draw @ 8V using a step-down regulator, 70mA with a linear regulator
 - PPM input signal voltage may range from 1V to15V
-- performs signal noise threshold estimation for sending gamepad updates only when required
+- performs signal noise estimation for differentiating between noise and user input
+- compatible with Mac OS, Android and Windows
 
 
 
@@ -134,7 +132,9 @@ TODO
 
 ## Usage & Fine-tuning
 
-The default parameters of this sketch are tuned for maximum compatibility with gamepad drivers, not for maximum performance: They force a fixed 6-axis gamepad with low resolution (8-bit) and a 25Hz refresh rate, which is probably not what you want!
+The default parameters of this sketch are tuned for maximum compatibility with gamepad drivers, not for maximum performance!
+
+They force a fixed 6-axis gamepad with low resolution (8 bit) and a 25Hz refresh rate. Your transmitter can do a lot better than that!
 
 You should therefore modify the *Configurable parameters* in the main `JR_BLE_Gamepad` sketch, as explained in this section.
 
@@ -152,16 +152,23 @@ Another issue with dual gamepad configurations is their support by RC simulators
 >
 > If you want to use all the PPM channels, then set the `FORCE_CHANNEL_COUNT` parameter to 0 (zero).
 
-### 8-bit vs 16-bit axis resolution
+### 7-, 8-, 15- and 16-bit axis resolutions
 
 8-bit axis resolution is the norm for your average gamepad that does not feature the high-precision gimbals found in a good RC transmitter.
 
 The USB HID standard (it's the same for Bluetooth) allows specifying 16-bit resolution axes, but not every gamepad driver supports this, which is why the default resolution is 8-bit.
 
+Actually the default resolution is more like 7-bit due to a workaround for a Unity bug under Windows (only positive axis values are used when the workaround is enabled, halving the resolution!)
+
 > 8-bit resolution is selected by setting a negative gamepad refresh rate value.
 > 16-bit resolution is selected by setting a positive gamepad refresh rate value.
 >
-> By default `REFRESH_RATE_DEFAULT` is set to -25, resulting in a 25 Hz gamepad refresh rate with 8-bit axis resolution. You can change this value of course, but a more flexible way is to use a refresh rate channel. Read on!
+> By default `REFRESH_RATE_DEFAULT` is set to -25, resulting in a 25 Hz gamepad refresh rate with 8-bit axis resolution. You can change this value of course, but a more flexible way is to use a refresh rate channel. (Read on!)
+>
+> If you do not intend to run RC simulators under Windows, you should disable the Unity bug workaround by setting `UNITY_BUG_WORKAROUND` to 0 (zero)
+> The effect of the workaround is that only positive axis values are used instead of the full negative to positive value range, thus effectively cutting the axis resolution in half!
+>
+> While this has no impact in 16-bit mode (pulse-width sampling resolution is effectively 14-bit) the difference is noticeable in 8-bit *compatibility* mode!
 
 The gamepad refresh rate specifies how often position updates are sent to the computer.
 
@@ -188,12 +195,16 @@ Switching between 8- and 16-bit axis resolutions and between single and dual gam
 
 There are 4 gamepad modes in total:
 
-| Bluetooth name  | res / #ch | Comment                                                 |
+| Bluetooth name  | Res / #ch | Comment                                                 |
 | --------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| JR Gamepad 8    | 8-bit / 6 | The most compatible, but also the poorest quality mode.<br />Only use it if you have no other choice! |
-| JR Gamepad 16   | 16-bit / 6 | Best performance overall if you do not need more than 6 channels. |
+| JR Gamepad 8    | 8-bit / 6 | *Compatibility* mode<br />Necessary on some Android devices. |
+| JR Gamepad 16   | 16-bit / 6 | *High-resolution* mode<br />This is the best performance mode. |
 | JR Gamepad 2x8  | 8-bit / 12 | Use only if you're stuck with 8-bit and need more than 6 channels. |
 | JR Gamepad 2x16 | 16-bit / 12 | The preferred choice if you need more than 6 channels. |
+| JR Gamepad 7 | 7-bit / 6 | Same as the above modes with the Unity bug enabled:<br />Resolution is cut in half! |
+| JR Gamepad 15 | 15-bit / 6 |  |
+| JR Gamepad 2x7 | 7-bit / 12 |  |
+| JR Gamepad 2x15 | 15-bit / 12 |  |
 
 ### PPM frame size
 
