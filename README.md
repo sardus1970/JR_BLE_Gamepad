@@ -24,7 +24,7 @@ By the time of this writing, the module has been tested successfully under Mac O
 - 50 nanoseconds pulse-width sampling resolution (14 bits)
 - 30mA average current draw @ 8V using a step-down regulator, 70mA with a linear regulator
 - PPM input signal voltage may range from 1V to15V
-- performs signal noise estimation for differentiating between noise and user input
+- signal noise estimation for differentiating between noise and user input
 - compatible with Mac OS, Android and Windows
 
 
@@ -130,11 +130,70 @@ TODO
 
 
 
+## Transmitters lacking a module bay
+
+Transmitters that lack a JR module bay can still be turned into a Bluetooth gamepad. The only condition is that they have to provide a usable PPM signal!
+
+The XK X6 is an unexpensive transmitter that was bundled with the micro-heli that you see on the photo:
+
+<img src="data/images/X6_front.jpg" width="80%" alt="X6 front view">
+
+It lacks a module bay, but it does feature a trainer port on the back. Trainer ports typically carry a standard PPM8 signal:
+
+<img src="data/images/X6_rear.jpg" width="80%" alt="X6 rear view">
+
+The best way to find out is to actually measure the trainer port signal with an oscilloscope:
+
+<img src="data/images/X6_PPM.jpg" width="80%" alt="X6 PPM signal">
+
+And yes, it turns out to be a standard 8-channel PPM signal with 3.3V amplitude. That signal can be fed directly to an ESP32 IO pin. No voltage-level shifting is required!
+
+The ESP32 has to be powered with a 3.3V source.
+
+You could of course use a separate voltage regulator that you feed from the transmitter's battery, but in this case it turns out that we can use the X6 transmitter's onboard regulated power:
+
+<img src="data/images/X6_AMS1117.jpg" width="80%" alt="X6 voltage regulator">
+
+The X6 transmitter uses a regular AMS1117 3.3V linear voltage regulator that you can see in the center of the photo. That regulator has a 1A max current rating and the transmitter draws 150mA, so there will be no problem in providing an extra 30mA to the ESP32 board.
+
+The X6 main board also features measuring pads which are convenient for soldering the GND, 3.3V and PPM wires for the ESP32 board. Those pads are circled in red in the above photo.
+
+Now, as this is intended as a proof-of-concept rather than a definite build, the wires are not soldered directly to the ESP board but to a 3-pin header instead, with patch wires connected to the board:
+
+<img src="data/images/X6_ESP32.jpg" width="80%" alt="X6 voltage regulator">
+
+The ESP32 board is wedged on the left side of the X6 transmitter's casing, as this was deemed the best location to avoid obstructing the Bluetooth antenna.
+
+A definite build should of course properly secure the board in the X6 casing (it is left "floating" in this build), include a switch for cutting power to the ESP and holes in the transmitter's case for viewing the board's LEDs and for accessing the USB port.
+
+#### Configuration
+
+The X6 does not give any possibility to tweak the PPM signal and the channels and switches have a fixed function: The first 4 channels are used for the sticks (aileron, elevator, throttle and rudder), the 5th is for setting the helicopter's tail gyro gain and the 6th is used for collective pitch.
+
+Two different gyro gain values can be configured on the transmitter and toggled with a switch. That makes the "gyro gain" channel interesting as a "refresh rate channel" candidate!
+
+The ESP32 has therefore been configured with `FORCE_CHANNEL_COUNT` and `REFRESH_RATE_CHANNEL` both set to 5. Two different gamepad modes / refresh rates can thus be configured on the transmitter.
+
+The 4 channels for the stick functions are configured with a linear curve ranging from -100 to 100.
+Expo, dual-rates, pitch curves, etc. are best set on the RC simulator, not on the transmitter!
+
+##### X6 transmitter with the BLE mod in action:
+
+[!![XK X6 BLE demo](data/images/XK_X6_BLE_DEMO.jpg)](https://youtu.be/LZBl3hdAWv4)
+
+##### Note:
+
+The X6 transmitter has a quirk which interferes with the ESP32's initial noise estimation, resulting in a weird gamepad behaviour:
+
+When powering on the transmitter, the throttle stick must be set at its bottom position, otherwise it goes BEEP BEEP BEEP until you move the stick down. That beeping disrupts the PPM signal ...the X6 designers have probably deemed a proper BEEP to be more important as a timely PPM signal!
+
+Therefore, make sure the throttle stick is at the bottom **<u>before</u>** switching on the transmitter.
+
 ## Usage & Fine-tuning
 
 The default parameters of this sketch are tuned for maximum compatibility with gamepad drivers, not for maximum performance!
 
-They force a fixed 6-axis gamepad with low resolution (8 bit) and a 25Hz refresh rate. Your transmitter can do a lot better than that!
+The defaults force a fixed 6-axis gamepad with low resolution (7 bit) and a 25Hz refresh rate. Your transmitter can do a lot better than that!
 
 You should therefore modify the *Configurable parameters* in the main `JR_BLE_Gamepad` sketch, as explained in this section.
 
@@ -144,13 +203,13 @@ A standard PPM signal contains 8 channels, which have to be mapped to gamepad ax
 
 Generic gamepad drivers however support at most 6 axes per gamepad: 4 analog stick axes plus 2 analog trigger buttons.
 
-Therefore, if more than 6 channels are required, they are mapped to a second gamepad. But some gamepad drivers (most notably Android) have trouble dealing with dual gamepad configurations, which is why the default setting is to limit the number of axes to 6.
+Therefore, if more than 6 channels are required, they will be mapped to a second gamepad. But some gamepad drivers (most notably Android) have trouble dealing with dual gamepad configurations, which is why the default setting is to limit the number of axes to 6.
 
-Another issue with dual gamepad configurations is their support by RC simulators: Even if the gamepad driver properly recognizes two gamepads, your sim may only support a single one.
+Another issue with dual gamepad configurations is their support by RC simulators: The operating system properly recognizing two gamepads is only one part of the equation. A sim that is not limited to a single gamepad is the second part.
 
 > The `FORCE_CHANNEL_COUNT` parameter is set to 6 by default, forcing a single gamepad configuration regardless of the number of channels available in the PPM signal.
 >
-> If you want to use all the PPM channels, then set the `FORCE_CHANNEL_COUNT` parameter to 0 (zero).
+> If you want to use all the available PPM channels, then set the `FORCE_CHANNEL_COUNT` parameter to 0 (zero).
 
 ### 7-, 8-, 15- and 16-bit axis resolutions
 
@@ -158,31 +217,30 @@ Another issue with dual gamepad configurations is their support by RC simulators
 
 The USB HID standard (it's the same for Bluetooth) allows specifying 16-bit resolution axes, but not every gamepad driver supports this, which is why the default resolution is 8-bit.
 
-Actually the default resolution is more like 7-bit due to a workaround for a Unity bug under Windows (only positive axis values are used when the workaround is enabled, halving the resolution!)
+Actually, the default resolution is effectively only 7-bit due to a workaround for a Unity engine bug under Windows. Only positive axis values are used when the workaround is enabled, cutting the available resolution in half!
 
 > 8-bit resolution is selected by setting a negative gamepad refresh rate value.
 > 16-bit resolution is selected by setting a positive gamepad refresh rate value.
 >
-> By default `REFRESH_RATE_DEFAULT` is set to -25, resulting in a 25 Hz gamepad refresh rate with 8-bit axis resolution. You can change this value of course, but a more flexible way is to use a refresh rate channel. (Read on!)
+> By default `REFRESH_RATE_DEFAULT` is set to -25, resulting in a 25 Hz gamepad refresh rate with 8-bit axis resolution. You can change this value of course, but a more flexible way is to use a *refresh rate channel* as explained later.
 >
 > If you do not intend to run RC simulators under Windows, you should disable the Unity bug workaround by setting `UNITY_BUG_WORKAROUND` to 0 (zero)
 > The effect of the workaround is that only positive axis values are used instead of the full negative to positive value range, thus effectively cutting the axis resolution in half!
 >
-> While this has no impact in 16-bit mode (pulse-width sampling resolution is effectively 14-bit) the difference is noticeable in 8-bit *compatibility* mode!
+> While this has no impact in 16-bit *high-resolution* mode (pulse-width sampling resolution is 14-bit) the difference is quite noticeable in 8-bit *compatibility* mode!
+
+### The refresh rate channel
 
 The gamepad refresh rate specifies how often position updates are sent to the computer.
 
 This is a critical setting that varies a lot among gamepad driver implementations: Too low a value and the sticks will feel unresponsive, too high a value and the gamepad driver will have trouble keeping up with the position updates, resulting in stuttering or extreme lag.
-
 You should strive for the highest possible refresh rate that will not overwhelm your gamepad driver.
 
-### The refresh rate channel
-
-The idea behind a refresh rate channel is to use one of the PPM channels to set the gamepad refresh rate.
+The idea behind a *refresh rate channel* is to use one of the PPM channels to set the gamepad refresh rate.
 
 This will sacrifice one channel, but it will give you a lot more flexibility as you can select 8-bit or 16-bit axis resolution and set the gamepad refresh rate on the fly from your RC transmitter, without having to edit the configuration parameters and re-flash the ESP32 board!
 
-> Set `REFRESH_RATE_CHANNEL` to the number of the channel (1 to max. number of PPM channels) that you want to use as the refresh rate channel.
+> Set `REFRESH_RATE_CHANNEL` to the number of the channel that you want to use as the refresh rate channel.
 > Note that the availability of a refresh rate channel overrides `REFRESH_RATE_DEFAULT`.
 >
 > If you do not want to use a refresh rate channel then set `REFRESH_RATE_CHANNEL` to 0 (zero).
@@ -191,17 +249,17 @@ This will sacrifice one channel, but it will give you a lot more flexibility as 
 
 The gamepad refresh rate can be changed on the fly, for example by mapping the refresh rate channel to a rotary knob on your transmitter, or by mapping discrete channel values to different switch positions.
 
-Switching between 8- and 16-bit axis resolutions and between single and dual gamepad modes however affects the structure of the data that is sent via Bluetooth. This means that the module has to be restarted in order for a mode switch to take effect. You may also have to un-pair & re-pair it with the computer!
+Switching between 8- and 16-bit axis resolutions and between single and dual gamepad modes however affects the structure of the data that is sent via Bluetooth (different HID reports) This means that the module has to be restarted in order for a mode switch to take effect. You may also have to un-pair & re-pair the module with the computer afterwards!
 
-There are 4 gamepad modes in total:
+There are 8 gamepad modes in total:
 
 | Bluetooth name  | Res / #ch | Comment                                                 |
 | --------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | JR Gamepad 8    | 8-bit / 6 | *Compatibility* mode<br />Necessary on some Android devices. |
-| JR Gamepad 16   | 16-bit / 6 | *High-resolution* mode<br />This is the best performance mode. |
+| JR Gamepad 16   | 16-bit / 6 | *High-resolution* mode<br />This is the overall best performance mode. |
 | JR Gamepad 2x8  | 8-bit / 12 | Use only if you're stuck with 8-bit and need more than 6 channels. |
 | JR Gamepad 2x16 | 16-bit / 12 | The preferred choice if you need more than 6 channels. |
-| JR Gamepad 7 | 7-bit / 6 | Same as the above modes with the Unity bug enabled:<br />Resolution is cut in half! |
+| JR Gamepad 7 | 7-bit / 6 | ...same as the above modes, but with the Unity bug under<br />Windows workaround enabled.<br />Resolution is cut in half, effectively losing 1 bit of precision! |
 | JR Gamepad 15 | 15-bit / 6 |  |
 | JR Gamepad 2x7 | 7-bit / 12 |  |
 | JR Gamepad 2x15 | 15-bit / 12 |  |
@@ -214,7 +272,7 @@ You can improve on this if your transmitter allows you to tweak the PPM signal s
 
 ​	*`number of channels * 2 ms + 2.6 ms = frame size in milliseconds`*
 
-The 2.6 ms in the above formula is the minimum sync pulse length plus a little margin (...this sketch allows for shorter sync pulses than the standard 4.6 ms)
+The 2.6 ms in the above formula is the 2.5 ms minimum sync pulse length plus a little margin (...this sketch allows for shorter sync pulses than the standard 4.6 ms)
 
 As an example, if you only need 6 channels you will get:
 
@@ -232,17 +290,19 @@ The frame size is defined in the PPM protocol's settings page:
 
 <img src="data/images/frame_size.jpg" width="50%" alt="PPM frame size">
 
-On *DeviationTX* the delta pulse width is set to 400 microseconds by default. Set it to 500 to use the full sampling resolution of this sketch.
+On *DeviationTX* the delta pulse width is set to 400 microseconds by default. You should set it to 500 to use the full sampling resolution, and limit all your channels to the -100 to +100 value range.
 
 ### The author's settings
 
-The author's module is configured with `FORCE_CHANNEL_COUNT` set to 0 (zero) and `REFRESH_RATE_CHANNEL` set to 6.
+The author's module is configured with `FORCE_CHANNEL_COUNT` set to 0 (zero), `REFRESH_RATE_CHANNEL`  to 6, and the  `UNITY_BUG_WORKAROUND` is enabled, so the transmitter can also be used on *Unity*-engine based simulators (such as *CGM Next* and *FPV Freerider*) on Windows PCs.
 
-This gives more flexibility when running different RC simulators on different systems: *CGM Next* helicopter sim on Mac OS, *FPV Freerider* quadcopter sim on Mac OS, and the *PicaSim* glider simulation on Android.
+This gives a lot of flexibility when running various RC simulators on different systems, while at the same time allowing tuning the module's settings on the transmitter.
 
-Six channels are sufficient for all those simulators and they are mapped as follows:
+Six channels are sufficient for all the simulators used by the author (*CGM Next, FPV Freerider* and *Picasim*).
+The channels are mapped as follows:
 
 - The first 4 are used for the stick axes (aileron, elevator, throttle and rudder)
+  On the transmitter they are mapped with a linear curve from -100 to 100
 - The 5th channel is used to map additional functions that are put on switches, such as selecting different flight conditions, autorotation, retracting landing gear, etc.
 - And the 6th is used as the refresh rate channel.
 
@@ -254,57 +314,11 @@ Different refresh rate channel values have therefore been mapped to different sw
 
 
 
-## Transmitters lacking a module bay
-
-Transmitters that lack a JR module bay can still be turned into a Bluetooth gamepad. The only condition is that they have to provide a usable PPM signal!
-
-The XK X6 that came bundled with the small helicopter that you see along it in the photo, is such a transmitter:
-
-<img src="data/images/X6_front.jpg" width="80%" alt="X6 front view">
-
-It lacks a module bay, but it does feature a "trainer port" on the back, which typically carries a standard PPM signal:
-
-<img src="data/images/X6_rear.jpg" width="80%" alt="X6 rear view">
-
-The best way to find out is to open the transmitter and to actually measure the trainer port signal with an oscilloscope:
-
-<img src="data/images/X6_PPM.jpg" width="80%" alt="X6 PPM signal">
-
-And effectively, it turns out to be a standard 8-channel PPM signal with 3.3V amplitude: That signal can be fed directly to an ESP32 input pin - no voltage level-shifting required!
-
-The ESP32 has to be powered with a 3.3V source. You could of course use a separate voltage regulator that you feed from the transmitter's battery, as is done with the JR module.
-
-But in this case, it turns out that we can use the 3.3V regulated power directly from the X6 transmitter's main board:
-
-<img src="data/images/X6_AMS1117.jpg" width="80%" alt="X6 voltage regulator">
-
-The X6 transmitter uses a regular AMS1117 3.3V linear voltage regulator that you can see in the center of the photo. That regulator has a 1A max current rating and the transmitter draws 150mA. It will have no problem providing an additional 30mA to the ESP32 board.
-
-The main board features measuring pads which can conveniently be used to solder the GND, 3.3V and PPM wires to the ESP32 board. You see them marked with red circles in the above photo.
-
-
-
-Now, as this is intended as a proof-of-concept rather than a definite build, the wires are not directly soldered to the ESP board but to a 3-pin header instead.
-
-They are temporarily patched to the ESP32 as depicted below:
-
-![X6_ESP32](/Users/fsit/Documents/Arduino/JR_BLE_Gamepad/data/images/X6_ESP32.jpg)
-
-The ESP32 board has been wedged on the left side of the X6 transmitter's casing. For this temporary builld it was the best location for avoiding obstructions to the Bluetooth antenna.
-
-A proper build should include a switch for turning Bluetooth on or off, holes in the transmitter housing for viewing the board's LEDs and accessing its USB port.
-
-
-
-TODO: short demo video
-
-
-
 ## Credits
 
 | To           | For                                                          |
 | ------------ | ------------------------------------------------------------ |
 | Sven Busser  | the design of the 3D-printed JR module case and for beta-testing on Windows 10 |
-| *lemmingdev* | for the Arduino *ESP32-BLE-Gamepad* library (*JR Gamepad* borrows heavily from that code) |
-| *chegewara*  | for various ESP32 BLE-related code examples                  |
+| *lemmingdev* | the Arduino *ESP32-BLE-Gamepad* library (*JR Gamepad* borrows heavily from that code) |
+| *chegewara*  | various ESP32 code examples, not only related to BLE         |
 
