@@ -3,17 +3,17 @@
 
 ## Introduction
 
-This ESP32 sketch turns your RC transmitter into a generic Bluetooth LE Gamepad, so you can run your favorite RC simulator wirelessly.
+This ESP32 sketch turns your RC transmitter into a generic Bluetooth LE Gamepad - run your favorite RC simulator wirelessly!
 
 ![Introduction image](data/images/intro.jpg)
 
-The goal was to get rid of any USB-C hubs, dongles, cables, etc. when running an RC simulator on the above laptop, while preserving the low latency and high resolution of a wired USB connection.
+The goal was to get rid of any USB-C hubs, dongles, cables, etc. when running an RC sim on the above laptop, all while preserving the low latency and high resolution of a wired USB connection.
 
 A gamepad emulation was chosen because most operating systems and RC sims support them out of the box, without having to install additional drivers.
 
 The yellow transmitter you see on the above photo (a *Jumper T8SG v2 plus*) features a *"JR Module"* bay on the back. In the RC world this is some kind of de-facto standard for extending a transmitter's functionality.
 
-It was a natural choice to try and make this project fit into such a module (which you see on the foreground of the photo). But on transmitters that lack a JR module bay you could still build the circuit directly into the transmitter's housing if it provides a usable PPM signal. An example is given at the end of this document.
+It was a natural choice to try and make this project fit into such a module (which you see on the foreground of the photo). But on transmitters that lack a JR module bay it is still possible to build the circuit directly into the transmitter's housing if a usable PPM signal is provided. An example is given later in this document.
 
 By the time of this writing, the module has been tested successfully under Mac OS (Catalina and Big Sur), various Android devices, and Windows 10.
 
@@ -82,7 +82,7 @@ As soon as a PPM signal is detected you should see something like this appearing
 	   Negative refresh rate --> 8-bit gamepad (compatibility mode) @ 25 Hz
 	   Waiting for Bluetooth connection...
 
-*Note: Ignore the "rmt error" appearing immediately after this. BLE initialization interferes with RMT, causing a glitch!*
+*Note: Ignore an "rmt error" appearing immediately after this. BLE initialization interferes with RMT, causing a glitch!*
 
 You will notice that the blue LED is now blinking slowly, indicating that there is no Bluetooth connection.
 
@@ -126,7 +126,7 @@ Those instructions assume that the stripboard circuit is intended to be fit into
 
 Prepare a piece of stripboard with the following dimensions:
 
-TODO
+TODO: description with 3D-printed module case
 
 
 
@@ -134,7 +134,7 @@ TODO
 
 Transmitters that lack a JR module bay can still be turned into a Bluetooth gamepad. The only condition is that they have to provide a usable PPM signal!
 
-The XK X6 is an unexpensive transmitter that was bundled with the micro-heli that you see on the photo:
+The XK X6 is an unexpensive transmitter that is bundled with the micro-heli that you see on the photo:
 
 <img src="data/images/X6_front.jpg" width="80%" alt="X6 front view">
 
@@ -148,34 +148,42 @@ The best way to find out is to actually measure the trainer port signal with an 
 
 And yes, it turns out to be a standard 8-channel PPM signal with 3.3V amplitude. That signal can be fed directly to an ESP32 IO pin. No voltage-level shifting is required!
 
-The ESP32 has to be powered with a 3.3V source.
+The ESP32 needs a 3.3V source.
 
-You could of course use a separate voltage regulator that you feed from the transmitter's battery, but in this case it turns out that we can use the X6 transmitter's onboard regulated power:
+You could of course use a separate voltage regulator that you feed from the transmitter's battery but in this case it turns out that we can use power from the transmitter's onboard regulator: an AMS1117 3.3V linear voltage regulator with a 1A max current rating.
 
-<img src="data/images/X6_AMS1117.jpg" width="80%" alt="X6 voltage regulator">
+As the transmitter only draws 150mA, it should have no problem in providing the extra 30mA required for the ESP32 board.
 
-The X6 transmitter uses a regular AMS1117 3.3V linear voltage regulator that you can see in the center of the photo. That regulator has a 1A max current rating and the transmitter draws 150mA, so there will be no problem in providing an extra 30mA to the ESP32 board.
+The X6 main board also features measuring pads which are convenient for soldering the GND, 3.3V and PPM wires for the ESP32 board.
+The wires have not been soldered directly to the ESP board but to a 3-pin header instead. The 3.3V wire is routed to a toggle switch (the blue one on the top right of the photo) before going to the 3-pin header.
 
-The X6 main board also features measuring pads which are convenient for soldering the GND, 3.3V and PPM wires for the ESP32 board. Those pads are circled in red in the above photo.
+The pin-header is secured with a screw at the location indicated by the arrow:
 
-Now, as this is intended as a proof-of-concept rather than a definite build, the wires are not soldered directly to the ESP board but to a 3-pin header instead, with patch wires connected to the board:
+<img src="data/images/X6_pads.jpg" width="80%" alt="X6 measuring pads">
+
+A servo cable, which mates with the 3-pin header above, is soldered to the ESP32 board.
+
+The board stands upright on the left bottom side of the transmitter's back case. This was deemed the best location to avoid obstructing the Bluetooth antenna, while allowing access to the ESP board's USB port from the bottom of the transmitter:
 
 <img src="data/images/X6_ESP32.jpg" width="80%" alt="X6 voltage regulator">
 
-The ESP32 board is wedged on the left side of the X6 transmitter's casing, as this was deemed the best location to avoid obstructing the Bluetooth antenna.
+The ESP board has been secured with some hot glue (...you could go fancy and create a custom 3D-printed bracket instead, but for this "proof-of-concept" build hot glue does the trick ;-)
 
-A definite build should of course properly secure the board in the X6 casing (it is left "floating" in this build), include a switch for cutting power to the ESP and holes in the transmitter's case for viewing the board's LEDs and for accessing the USB port.
+A hole has been drilled into the front of the transmitter's case for viewing the board's LEDs, and another hole on the bottom for accessing the USB port:
+
+<img src="data/images/X6_LEDs.jpg" width="50%" alt="X6 voltage regulator">
 
 #### Configuration
 
-The X6 does not give any possibility to tweak the PPM signal and the channels and switches have a fixed function: The first 4 channels are used for the sticks (aileron, elevator, throttle and rudder), the 5th is for setting the helicopter's tail gyro gain and the 6th is used for collective pitch.
+The X6 transmitter only offers limited configuration flexibility. The PPM signal cannot be tweaked and the channels and switches are hard-wired to fixed functions:
+
+The first 4 channels are used for the sticks (aileron, elevator, throttle and rudder), the 5th is for setting the helicopter's tail gyro gain and the 6th is used for collective pitch.
 
 Two different gyro gain values can be configured on the transmitter and toggled with a switch. That makes the "gyro gain" channel interesting as a "refresh rate channel" candidate!
 
 The ESP32 has therefore been configured with `FORCE_CHANNEL_COUNT` and `REFRESH_RATE_CHANNEL` both set to 5. Two different gamepad modes / refresh rates can thus be configured on the transmitter.
 
 The 4 channels for the stick functions are configured with a linear curve ranging from -100 to 100.
-Expo, dual-rates, pitch curves, etc. are best set on the RC simulator, not on the transmitter!
 
 ##### X6 transmitter with the BLE mod in action:
 
@@ -185,7 +193,7 @@ Expo, dual-rates, pitch curves, etc. are best set on the RC simulator, not on th
 
 The X6 transmitter has a quirk which interferes with the ESP32's initial noise estimation, resulting in a weird gamepad behaviour:
 
-When powering on the transmitter, the throttle stick must be set at its bottom position, otherwise it goes BEEP BEEP BEEP until you move the stick down. That beeping disrupts the PPM signal ...the X6 designers have probably deemed a proper BEEP to be more important as a timely PPM signal!
+When powering on the transmitter, the throttle stick must be at its bottom position, otherwise the TX goes BEEP BEEP BEEP... until you move the stick down. That beeping disrupts the PPM signal! The X6 designers apparently deemed a proper-sounding BEEP to be more important than a timely PPM signal!
 
 Therefore, make sure the throttle stick is at the bottom **<u>before</u>** switching on the transmitter.
 
