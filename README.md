@@ -3,7 +3,7 @@
 
 ## Introduction
 
-This ESP32 sketch turns your RC transmitter into a generic Bluetooth LE Gamepad - run your favorite RC simulator wirelessly!
+This ESP32 sketch turns your RC transmitter into a generic Bluetooth LE Gamepad : Run your favorite RC simulator wirelessly!
 
 ![Introduction image](data/images/intro.jpg)
 
@@ -13,15 +13,15 @@ A gamepad emulation was chosen because most operating systems and RC sims suppor
 
 The yellow transmitter you see on the above photo (a *Jumper T8SG v2 plus*) features a *"JR Module"* bay on the back. In the RC world this is some kind of de-facto standard for extending a transmitter's functionality.
 
-It was a natural choice to try and make this project fit into such a module (which you see on the foreground of the photo). But on transmitters that lack a JR module bay it is still possible to build the circuit directly into the transmitter's housing if a usable PPM signal is provided. An example is given later in this document.
+It was a natural choice to try and make this project fit into such a module (which you see on the foreground of the photo). But on transmitters that lack a JR module bay it is still possible to build the circuit directly into the transmitter's housing if a usable PPM signal is available. An example is given later in this document.
 
 By the time of this writing, the module has been tested successfully under Mac OS (Catalina and Big Sur), various Android devices, and Windows 10.
 
 ### Features
 
 - automatic detection of PPM frame size, up to 12 channels (PPM12)
-- gamepad refresh rate & axis resolution adjustable on the transmitter (sacrifices one channel)
-- 50 nanoseconds pulse-width sampling resolution (14 bits)
+- gamepad refresh rate & axis resolution adjustable on the transmitter
+- 50 nanoseconds, or 14 bit, pulse-width sampling resolution
 - 30mA average current draw @ 8V using a step-down regulator, 70mA with a linear regulator
 - PPM input signal voltage may range from 1V to15V
 - signal noise estimation for differentiating between noise and user input
@@ -45,6 +45,8 @@ TODO: photo with everything needed
 7. pin headers to solder the ESP32 board onto the stripboard
 8. an on/off switch
 9. soldering iron, dremel tool and a glue gun
+
+...and of course you will need the Arduino IDE (https://www.arduino.cc/en/software) with the *"Arduino core for the ESP32"* by Espressif: Follow the instructions on https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md to install it using the Arduino IDE *Boards Manager*.
 
 ### Testing the ESP32 board
 
@@ -74,30 +76,28 @@ Configure your transmitter to output a PPM signal.
 As soon as a PPM signal is detected you should see something like this appearing in the monitor log:
 
 	2. NoiseEstimator: sampling noise...
-	   Diff : 1 1 21 21 21 21 
-	   Noise threshold (max) = 25
+	   Diff : 1 1 21 21 39 41 
+	   Noise threshold (max) = 49
 	
 	3. GamepadRefresh: axisCount = 6
+	   Unity bug workaround under Windows is active
 	   No refresh rate channel: using REFRESH_RATE_DEFAULT = -25
 	   Negative refresh rate --> 8-bit gamepad (compatibility mode) @ 25 Hz
 	   Waiting for Bluetooth connection...
 
-*Note: Ignore an "rmt error" appearing immediately after this. BLE initialization interferes with RMT, causing a glitch!*
+*Note: Ignore any "rmt" errors appearing immediately after this! BLE initialization interferes with RMT, causing a glitch.*
 
 You will notice that the blue LED is now blinking slowly, indicating that there is no Bluetooth connection.
 
 Open the Bluetooth settings on your computer. You should see a device called *JR Gamepad 8*.
 Pair the device, and if all goes well the onboard LED will turn a steady blue, and a stream of axis values will appear in the serial monitor:
 
-	-62 -65 196 196 -11468 32767 / 25 Hz
-	-65 -127 131 196 -11468 32767 / 25 Hz
-	-62 -131 196 262 -11468 32767 / 25 Hz
-	-62 -65 196 196 -11468 32767 / 25 Hz
-	-65 -65 196 196 -11468 32767 / 25 Hz
-	-131 -65 196 196 -11465 32767 / 25 Hz
-	-65 -65 196 262 -11468 32767 / 25 Hz
-	-65 -65 199 262 -11468 32767 / 25 Hz
-	-65 -65 134 196 -11468 32767 / 25 Hz
+	63 63 64 64 41 127 / 25 Hz
+	63 63 64 64 41 127 / 25 Hz
+	63 63 64 64 41 127 / 25 Hz
+	63 63 64 64 41 127 / 25 Hz
+	63 63 64 64 41 127 / 25 Hz
+	63 63 64 64 41 127 / 25 Hz
 
 Those values appear at a slow rate when you are not touching the transmitter's sticks. But as soon as you wiggle the sticks it will jump to the specified refresh rate (25 Hz)
 
