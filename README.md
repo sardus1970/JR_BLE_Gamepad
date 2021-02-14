@@ -23,7 +23,7 @@ By the time of this writing, the module has been tested successfully under Mac O
 - gamepad refresh rate & axis resolution adjustable on the transmitter
 - 50 nanoseconds, or 14 bit, pulse-width sampling resolution
 - 30mA average current draw @ 8V using a step-down regulator, 70mA with a linear regulator
-- wide range of PPM input signal voltages (1V to15V)
+- wide range of PPM input signal voltages (1V to 15V)
 - signal noise estimation for differentiating between noise and user input
 - compatible with Mac OS, Android and Windows
 
@@ -66,7 +66,7 @@ If all goes well, the following output should appear in the Serial Monitor:
 
 You will also notice that the blue onboard LED is now blinking fast, indicating that there is no PPM signal.
 
-**IMPORTANT**: The next steps assume that your transmitter outputs a 3.3 volt PPM signal on pin 5 in the JR module bay. It is vital to check that the PPM signal voltage does not exceed 3.3V, as higher voltages might damage the ESP32 or even your transmitter. Skip to this section if that's not the case or if you're unsure!
+**IMPORTANT**: The next steps assume that your transmitter outputs a 3.3 volt PPM signal on pin 5 in the JR module bay. It is vital to check that the PPM signal voltage does not exceed 3.3V, as higher voltages might damage the ESP32 or even your transmitter. Skip this section if that's not the case or if you're unsure!
 
 Use two patch wires to connect the GND (2) and PPM signal (5) pins from your transmitter's module bay to the ESP32 board's GND and `PPM_PIN` (*IO22* by default):
 
@@ -159,13 +159,13 @@ Notes:
 
 - Only the required 3 pins (and an additional one for increased mechanical stability) have been soldered to the above ESP32 board instead of entire pin-headers. That makes it easier to de-solder the board if necessary.
 - Unused stripes are grounded so they act as a ground plane
-- The author forgot to join two traces which is why there is one additional wire (...you should not solder stuff after 23 o'clock)
+- The author forgot to join two traces which is why there is one additional wire (...you should not solder stuff after 23 o'clock!)
 
 The final result after fitting the board & on/off switch into the 3D-printed module case:
 
 <img src="data/images/m_finished.jpg" width="70%" alt="module bay fit">
 
-The module cover clicks onto the base and features a thin translucent plastic layer over the board's LEDs:
+The module lid clicks onto the base and features a thin translucent plastic layer over the board's LEDs:
 
 <img src="data/images/m_led.jpg" width="80%" alt="module bay fit">
 
@@ -204,7 +204,7 @@ Actually, the default resolution is effectively only 7-bit due to a workaround f
 > 8-bit resolution is selected by setting a negative gamepad refresh rate value.
 > 16-bit resolution is selected by setting a positive gamepad refresh rate value.
 >
-> By default `REFRESH_RATE_DEFAULT` is set to -25, resulting in a 25 Hz gamepad refresh rate with 8-bit axis resolution. You can change this value of course, but a more flexible way is to use a *refresh rate channel* as explained later.
+> By default `REFRESH_RATE_DEFAULT` is set to -25, resulting in a 25 Hz gamepad refresh rate with 8-bit axis resolution. You can change the default of course, but a more flexible way is to use a *refresh rate channel* as explained later.
 >
 > If you do not intend to run RC simulators under Windows, you should disable the Unity bug workaround by setting `UNITY_BUG_WORKAROUND` to 0 (zero)
 > The effect of the workaround is that only positive axis values are used instead of the full negative to positive value range, thus effectively cutting the axis resolution in half!
@@ -276,11 +276,11 @@ On *DeviationTX* the delta pulse width is set to 400 microseconds by default. Yo
 
 ### The author's settings
 
-The author's module is configured with `FORCE_CHANNEL_COUNT` set to 0 (zero), `REFRESH_RATE_CHANNEL`  to 6, and the  `UNITY_BUG_WORKAROUND` is enabled, so the transmitter can also be used on *Unity*-engine based simulators (such as *CGM Next* and *FPV Freerider*) on Windows PCs.
+The author's module is configured with `FORCE_CHANNEL_COUNT` set to 0 (zero) and  `REFRESH_RATE_CHANNEL`  to 6. The `UNITY_BUG_WORKAROUND` is enabled, so the transmitter can also be used on *Unity*-engine based simulators (such as *CGM Next* and *FPV Freerider*) on Windows PCs.
 
-This gives a lot of flexibility when running various RC simulators on different systems, while at the same time allowing tuning the module's settings on the transmitter.
+This gives a lot of flexibility when running various RC simulators on different systems, while at the same time allowing to tune the module's settings on the transmitter.
 
-Six channels are sufficient for all the simulators used by the author (*CGM Next, FPV Freerider* and *Picasim*).
+Six channels are sufficient for all the simulators used by the author (*CGM Next* heli sim, *FPV Freerider* drone sim, and the glider simulator *Picasim*).
 The channels are mapped as follows:
 
 - The first 4 are used for the stick axes (aileron, elevator, throttle and rudder)
@@ -288,11 +288,15 @@ The channels are mapped as follows:
 - The 5th channel is used to map additional functions that are put on switches, such as selecting different flight conditions, autorotation, retracting landing gear, etc.
 - And the 6th is used as the refresh rate channel.
 
-The Macbook runs at the 100 Hz maximum refresh rate (...because it can ;-)
+The Macbook runs at the 100 Hz maximum refresh rate ...because it can ;-)
 
 But different refresh rates and modes have to be used on the Android devices: The *Bqeel Y4 Max* TV box only works reliably in 8-bit mode up to 25 Hz, while the *Blackview Tab 8* tablet works fine in 16-bit mode up to 80 Hz.
 
-Different refresh rate channel values have therefore been mapped to different switch positions on the transmitter, to select the gamepad mode and refresh rate that best fits a particular system.Transmitters lacking a module bay
+Different refresh rate channel values have therefore been mapped to different switch positions on the transmitter to select the gamepad mode and refresh rate that best fits a particular system.
+
+
+
+## Transmitters lacking a module bay
 
 Transmitters that lack a JR module bay can still be turned into a Bluetooth gamepad. The only condition is that they have to provide a usable PPM signal!
 
@@ -327,7 +331,7 @@ The board stands upright on the left bottom side of the transmitter's back case.
 
 <img src="data/images/X6_ESP32.jpg" width="80%" alt="X6 voltage regulator">
 
-The ESP board has been secured with some hot glue (...you could go fancy and create a custom 3D-printed bracket instead, but for a "proof-of-concept" build like this one hot glue does the trick ;-)
+The ESP board has been secured with some hot glue (...you could go fancy and create a custom 3D-printed bracket instead, but hot glue does the trick for a "proof-of-concept" build like this one ;-)
 
 A hole has been drilled into the front of the transmitter's case for viewing the board's LEDs, and another hole on the bottom for accessing the USB port:
 
@@ -343,7 +347,7 @@ Two different gyro gain values can be configured on the transmitter and toggled 
 
 The ESP32 has therefore been configured with `FORCE_CHANNEL_COUNT` and `REFRESH_RATE_CHANNEL` both set to 5. Two different gamepad modes / refresh rates can thus be configured on the transmitter.
 
-The 4 channels for the stick functions are configured with a linear curve ranging from -100 to 100.
+The 4 channels for the stick functions are configured with a linear curve ranging from 0 to 100. (On the X6, 50 is the mid-stick position.)
 
 ##### X6 transmitter video with the BLE mod in action:
 
@@ -353,7 +357,7 @@ The 4 channels for the stick functions are configured with a linear curve rangin
 
 The X6 transmitter has a quirk which interferes with the ESP32's initial noise estimation, resulting in a weird gamepad behaviour:
 
-When powering on the transmitter, the throttle stick must be at its bottom position, otherwise the TX goes BEEP BEEP BEEP... until you move the stick down. That beeping disrupts the PPM signal! The X6 designers apparently deemed a proper-sounding BEEP to be more important than a timely PPM signal!
+When powering on the transmitter the TX goes BEEP BEEP BEEP if the throttle stick is not at its bottom position... until you move the stick down. That beeping disrupts the PPM signal! The X6 designers apparently deemed a proper-sounding BEEP to be more important than a timely PPM signal!
 
 Therefore, make sure the throttle stick is at the bottom **<u>before</u>** switching on the transmitter.
 
