@@ -13,7 +13,7 @@ A gamepad emulation was chosen because most operating systems and RC sims suppor
 
 The yellow transmitter you see on the above photo (a *Jumper T8SG v2 plus*) features a *"JR Module"* bay on the back. In the RC world this is some kind of de-facto standard for extending a transmitter's functionality.
 
-It was a natural choice to try and make this project fit into such a module (which you see on the foreground of the photo). But on transmitters that lack a JR module bay it is still possible to build the circuit directly into the transmitter's housing if a usable PPM signal is available. (An example is given at the end of this document)
+It was a natural choice to try and make this project fit into such a module. But on transmitters that lack a JR module bay it is still possible to build the circuit directly into the transmitter's housing if a usable PPM signal is available. An example is given at the end of this document.
 
 By the time of this writing, the module has been tested successfully under Mac OS (Catalina and Big Sur), various Android devices, and Windows 10.
 
@@ -48,7 +48,7 @@ By the time of this writing, the module has been tested successfully under Mac O
 10. an on/off switch
 11. soldering iron, dremel tool and a hot glue gun
 
-On the software-side you will need the Arduino IDE (https://www.arduino.cc/en/software) with the *"Arduino core for the ESP32"* extension by Espressif. (Follow the instructions on https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md to install it using the *Arduino IDE Boards Manager*.)
+On the software-side you will need the Arduino IDE (https://www.arduino.cc/en/software) with the *"Arduino core for the ESP32"* extension by Espressif. Follow the instructions on https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md to install it using the *Arduino IDE Boards Manager*.
 
 ### Testing the ESP32 board
 
@@ -169,7 +169,7 @@ The module cover clicks onto the base and features a thin translucent plastic la
 
 <img src="data/images/m_led.jpg" width="80%" alt="module bay fit">
 
-*(...picture taken while being distracted by the cat)*
+*(...picture taken while being distracted by the cat ;-)*
 
 ## Usage & fine-tuning
 
