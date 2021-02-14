@@ -169,7 +169,7 @@ The module cover clicks onto the base and features a thin translucent plastic la
 
 <img src="data/images/m_led.jpg" width="80%" alt="module bay fit">
 
-*(...this picture taken while being distracted by the cat ;-)*
+*(...picture taken while being distracted by the cat)*
 
 ## Usage & fine-tuning
 
