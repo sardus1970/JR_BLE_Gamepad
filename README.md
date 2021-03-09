@@ -21,7 +21,7 @@ By the time of this writing, the module has been tested successfully under Mac O
 
 - automatic detection of PPM frame size, up to 12 channels
 - gamepad refresh rate & axis resolution adjustable on the transmitter
-- 100 nanoseconds, or 13 bit, pulse-width sampling resolution
+- 50 nanoseconds, or 14 bit, pulse-width sampling resolution
 - 30mA average current draw @ 8V using a step-down regulator, 70mA with a linear regulator
 - wide range of PPM input signal voltages (1V to 15V)
 - signal noise estimation for differentiating between noise and user input
@@ -209,7 +209,7 @@ Actually, the default resolution is effectively only 7-bit due to a workaround f
 > If you do not intend to run RC simulators under Windows, you should disable the Unity bug workaround by setting `UNITY_BUG_WORKAROUND` to 0 (zero)
 > The effect of the workaround is that only positive axis values are used instead of the full negative to positive value range, thus effectively cutting the axis resolution in half!
 >
-> While this has no impact in 16-bit *high-resolution* mode (pulse-width sampling resolution is 13-bit) the difference is quite noticeable in 8-bit *compatibility* mode!
+> While this has no impact in 16-bit *high-resolution* mode (pulse-width sampling resolution is 14-bit) the difference is quite noticeable in 8-bit *compatibility* mode!
 
 ### The refresh rate channel
 
