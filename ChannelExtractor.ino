@@ -49,7 +49,7 @@ void channelExtractorTask (void *pvParameter) {
         channelCount = PPM_MAX_CHANNELS;
        
       for (int i = 0; i < channelCount && i < PPM_MAX_CHANNELS; i++) {
-        //Serial.print (((item+i)->duration1 + (item+i)->duration0) / RMT_TICK_US); Serial.print(" ");
+        //Serial.print ((item+i)->duration1); Serial.print("+"); Serial.print((item+i)->duration0); Serial.print(" ");
         channelValues[i] = (item+i)->duration1 + (item+i)->duration0;
       }
       //Serial.println();

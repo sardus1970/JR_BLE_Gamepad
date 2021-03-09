@@ -32,9 +32,11 @@ int16_t _channelValueToAxisValue (uint32_t channelValue) {
 // Compute the gamepad refresh rate, which can be set dynamically via the refresh rate channel
 
 uint32_t _getRefreshRate() {
+  int16_t axisValue = abs(_channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL -1]));
   uint32_t refreshRate = REFRESH_RATE_CHANNEL > 0
-    ? abs(_channelValueToAxisValue (channelValues[REFRESH_RATE_CHANNEL -1])
-      - (UNITY_BUG_WORKAROUND ? AXIS_MAX / 2 : 0)) * REFRESH_RATE_MAX / AXIS_MAX
+    ? ( UNITY_BUG_WORKAROUND
+      ? abs (axisValue - AXIS_MAX / 2) * 2 * REFRESH_RATE_MAX / AXIS_MAX
+      : axisValue * REFRESH_RATE_MAX / AXIS_MAX )
     : abs(REFRESH_RATE_DEFAULT);
 
   return refreshRate < REFRESH_RATE_MIN ? REFRESH_RATE_MIN : refreshRate;
@@ -88,6 +90,7 @@ void gamepadRefreshTask (void *pvParameter) {
       // convert timer ticks to gamepad axis values
       for (int i = 0; i < axisCount; i++) {
         axisValues[i] = _channelValueToAxisValue (channelValues[i]);
+        // DEBUG_PRINT (channelValues[i]); DEBUG_PRINT ("/");
         DEBUG_PRINT (gamepad.compatibilityMode ? (axisValues[i] >> 8) : axisValues[i]); DEBUG_PRINT (" ");
       }
       DEBUG_PRINT ("/ "); DEBUG_PRINT (refreshRate); DEBUG_PRINTLN (" Hz");

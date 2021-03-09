@@ -32,7 +32,7 @@
 // ----- Configurable parameters
 
 // Debug mode: if defined, a lot of stuff gets printed to the Serial Monitor
-#define DEBUG
+#undef DEBUG
 
 // The JR module's PPM input is attached to this pin
 #define PPM_PIN GPIO_NUM_22
@@ -54,8 +54,8 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // 
 // To accomodate the limitations of different gamepad drivers without having to edit
 // the parameters in this sketch and re-flash the board, a "refresh rate channel"
-// can be used to set both he desired refresh rate and to switch between 8-bit
-// and 16-bit axis resolution modes:
+// can be used to set both he desired refresh rate and to switch between an 8-bit
+// "compatibility" and a 16-bit "high-resolution" axis mode:
 // 
 //    - Negative channel values indicate 8-bit "compatibility" mode
 //    - Positive values indicate 16-bit "high-resolution" mode
@@ -69,7 +69,7 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 //    - A channel value of 30 selects 16-bit "high-resolution" mode and a 30 Hz refresh rate
 //    - A channel value of 70 selects 16-bit "high-resolution" mode and a 70 Hz refresh rate
 //
-// Note that the 8-bit or 16-bit resolution is set once on startup, and cannot be changed
+// Note that the 8-bit or 16-bit resolution is set on startup, and cannot be changed
 // without restarting the board. The refresh rate however can be changed on the fly.
 // 
 // If you do not intend to use a refresh rate channel then set it to zero, and use
@@ -86,7 +86,7 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // notably Android) have trouble dealing with!
 // 
 // If you want to use all the channels that are present in the PPM signal, then set
-// FORCE_CHANNEL_COUNT to zero (the default)
+// FORCE_CHANNEL_COUNT to zero
 #define FORCE_CHANNEL_COUNT 6
 
 // NoiseEstimator: scale factor when using max noise as the threshold.
@@ -106,8 +106,6 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 //
 // Note that changing these parameters may require adjusting the RMT parameters
 // (ESP32 "Remote Control" module) as well!
-// The PPM_SYNC_MINIMUM value is especially critical, as the product
-// "PPM_SYNC_MINIMUM * RMT_TICK_US" must fit in a 16-bit hardware register!
 #define PPM_SYNC_MINIMUM  2500
 #define PPM_PULSE_CENTER  1500
 #define PPM_PULSE_DELTA   500
@@ -123,7 +121,7 @@ const int unusedOutput[] = { 0,1,4,5,12,13,14,15,16,17,18,19,20,21,23,24,25,26,2
 // The ESP32 RMT module is used to sample and decode the PPM signal. Only change these
 // values if you know the implications (ie. read the datasheets first!)
 #define RMT_RX_CHANNEL   RMT_CHANNEL_0          // RMT has 8 channels and we have to pick one
-#define RMT_CLK_DIV      4                      // RMT clock divider (80 MHz gets divided by RMT_CLK_DIV)
+#define RMT_CLK_DIV      8                      // RMT clock divider (80 MHz gets divided by RMT_CLK_DIV)
 #define RMT_TICK_US      (80 / RMT_CLK_DIV)     // RMT clock ticks per microsecond
 
 // Gamepad axis resolution (16 bit, only the high byte is used in 8 bit mode)
